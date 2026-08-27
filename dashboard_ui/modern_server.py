@@ -266,7 +266,7 @@ def _policy_artifacts() -> tuple:
 
 
 def _load_policy_eval_cache() -> dict:
-    """以清单中的 test 查询样本做离线回放，候选库保持为完整 FAISS 索引。"""
+    """以全量面签查询样本做离线回放，候选库保持为完整 FAISS 索引。"""
     global _policy_eval_cache
     with _policy_eval_lock:
         if _policy_eval_cache is not None:
@@ -286,12 +286,10 @@ def _load_policy_eval_cache() -> dict:
             directory = rel.split("/", 1)[0] if rel else ""
             if directory:
                 group_by_dir[directory] = str(row.get("similar_group", "") or "")
-        query_ids = [i for i, row in enumerate(manifest)
-                     if str(row.get("split", "")).lower() == "test"]
-        evaluation_split = "test"
-        if not query_ids:
-            query_ids = list(range(index.ntotal))
-            evaluation_split = "all"
+        # 阈值策略页面需要呈现策略作用于全部面签时的影响，
+        # 因此 3,254 张面签均作为查询样本；FAISS 候选库同样保持全量。
+        query_ids = list(range(index.ntotal))
+        evaluation_split = "all"
         query_vectors = np.vstack([index.reconstruct(i) for i in query_ids]).astype("float32")
         scores, neighbors = index.search(query_vectors, 6)
         max_scores = []
@@ -856,7 +854,7 @@ def policy_impact(high_risk_threshold: float):
         "sample_count": cache["sample_count"],
         "comparison_count": cache["comparison_count"],
         "evaluation_split": cache["evaluation_split"],
-        "sample_scope": "清单 test 查询样本对完整 FAISS 库的 Top-5 离线回放",
+        "sample_scope": "全量面签查询样本对完整 FAISS 库的 Top-5 离线回放",
         "high_risk": _threshold_metrics(cache, high),
         "curve": [_threshold_metrics(cache, t) for t in curve_thresholds],
         "sources": {
