@@ -1,0 +1,58 @@
+{
+  "model_name": "google/siglip2-base-patch16-224",
+  "device": "cuda",
+  "dataset_root": "/workspace/jinchuang_v4/extracted/data",
+  "annotations_path": "/workspace/jinchuang_v4/extracted/data/annotations.csv",
+  "identity_map_path": "/workspace/jinchuang_v4/code/outputs/mvp/customer_identity_map_from_annotations.csv",
+  "total_images": 16270,
+  "valid_images": 16270,
+  "bad_images": 0,
+  "class_counts": {
+    "bank_statement": 3254,
+    "contract": 3254,
+    "face_signing": 3254,
+    "id_card_back": 3254,
+    "id_card_front": 3254
+  },
+  "selected_face_signing": 3254,
+  "top_k": 10,
+  "high_risk_threshold": 0.97,
+  "high_risk_threshold_source": "business_policy_initial_value",
+  "medium_risk_threshold": 0.93,
+  "cross_customer_threshold": 0.95,
+  "same_customer_threshold": 0.92,
+  "fraud_monitoring_summary": {
+    "total_pairs": 25001,
+    "suspicious_pairs": 11447,
+    "by_fraud_type": {
+      "same_customer_repeat": 1054,
+      "cross_customer_fraud": 10320,
+      "cross_customer_candidate": 73
+    },
+    "pending_customer_verification": 73,
+    "by_relation": {
+      "same_customer": 1093,
+      "cross_customer": 23309,
+      "unknown": 599
+    },
+    "by_priority": {
+      "urgent": 3768,
+      "standard": 7655,
+      "low": 24
+    },
+    "by_fraud_score_level": {
+      "critical": 11242,
+      "high": 133,
+      "medium": 71,
+      "low": 1
+    },
+    "risk_cluster_count": 247,
+    "max_risk_cluster_size": 1506,
+    "cross_business_suspicious": 0,
+    "critical_alerts": 11242,
+    "risk_graph_nodes": 2667,
+    "risk_graph_edges": 11447
+  },
+  "proxy_best_f1_threshold": 0.98,
+  "elapsed_seconds": 17.8
+}

@@ -1,0 +1,221 @@
+{
+  "train": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "bank_statement": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2278
+      },
+      "contract": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2278
+      },
+      "face_signing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2278
+      },
+      "id_card_back": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2278
+      },
+      "id_card_front": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2278
+      }
+    },
+    "confusion_matrix": [
+      [
+        2278,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2278,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2278,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2278,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        2278
+      ]
+    ]
+  },
+  "val": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "bank_statement": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "contract": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "face_signing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "id_card_back": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "id_card_front": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      }
+    },
+    "confusion_matrix": [
+      [
+        488,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        488,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        488,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        488,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        488
+      ]
+    ]
+  },
+  "test": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "bank_statement": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "contract": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "face_signing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "id_card_back": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      },
+      "id_card_front": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 488
+      }
+    },
+    "confusion_matrix": [
+      [
+        488,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        488,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        488,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        488,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        488
+      ]
+    ]
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "stage1": {
+    "purpose": "image-only similar_group detection",
+    "operating_policy": {
+      "name": "recall_first",
+      "risk_preference": "recall_first_false_positives_accepted_for_manual_review",
+      "target_recall": 0.95,
+      "min_precision": 0.55
+    },
+    "pair_symmetry_handling": {
+      "policy": "undirected_pair_canonicalization",
+      "selection": "keep_highest_label_then_reviewed_then_global_similarity_then_best_rank",
+      "rows_before_collapse": 32540,
+      "self_pair_rows_removed": 0,
+      "symmetric_direction_rows_removed": 7539,
+      "unique_undirected_pairs": 25001
+    },
+    "image_features": [
+      "global_semantic_similarity",
+      "subject_region_hist_similarity",
+      "background_hist_similarity",
+      "local_structure_orb_ratio",
+      "dhash_similarity",
+      "mirror_local_structure_orb_ratio",
+      "mirror_subject_region_hist_similarity",
+      "mirror_background_hist_similarity",
+      "mirror_dhash_similarity",
+      "equalized_dhash_similarity",
+      "edge_dhash_similarity",
+      "edge_hist_similarity",
+      "rotated_dhash_similarity",
+      "rotated_dhash_gain",
+      "rotated_edge_dhash_similarity",
+      "rotated_edge_dhash_gain",
+      "brightness_delta",
+      "contrast_delta",
+      "rgb_mean_abs_delta",
+      "rgb_mean_euclidean_delta",
+      "lab_mean_abs_delta",
+      "lab_delta_e",
+      "lab_delta_e2000",
+      "hsv_mean_abs_delta",
+      "hsv_hist_similarity",
+      "blur_ratio"
+    ],
+    "label_definition": "same_similar_group OR renewal_base_pair, overridden by outputs/mvp/stage1_review.csv pair labels when present",
+    "reviewed_pair_label_rows": 0,
+    "reviewed_pair_label_positive_rows": 0,
+    "reviewed_pair_label_negative_rows": 0,
+    "reviewed_pair_label_unique_pairs": 0,
+    "pair_level_split": {
+      "rows_train": 18750,
+      "rows_test": 6251,
+      "best_threshold": {
+        "threshold": 0.9400000000000001,
+        "tp": 789,
+        "fp": 2,
+        "fn": 3,
+        "precision": 0.9974715549936789,
+        "recall": 0.9962121212121212,
+        "f1": 0.9968414403032217,
+        "f2": 0.9964637534730991,
+        "selection_policy": "recall_first",
+        "target_recall": 0.95,
+        "min_precision": 0.55,
+        "selection_reason": "met_target_recall_and_min_precision"
+      },
+      "metrics": {
+        "threshold": 0.9400000000000001,
+        "accuracy": 0.9992001279795233,
+        "precision": 0.9974715549936789,
+        "recall": 0.9962121212121212,
+        "f1": 0.9968414403032217,
+        "roc_auc": 0.9999666938666755,
+        "positive_predictions": 791
+      },
+      "visual_override_hits_test": 618
+    },
+    "group_level_split": {
+      "rows_train": 14519,
+      "rows_test": 2143,
+      "rows_dropped_cross_split": 8339,
+      "best_threshold": {
+        "threshold": 0.39,
+        "tp": 721,
+        "fp": 13,
+        "fn": 36,
+        "precision": 0.9822888283378747,
+        "recall": 0.952443857331572,
+        "f1": 0.9671361502347418,
+        "f2": 0.9582668793195108,
+        "selection_policy": "recall_first",
+        "target_recall": 0.95,
+        "min_precision": 0.55,
+        "selection_reason": "met_target_recall_and_min_precision"
+      },
+      "metrics": {
+        "threshold": 0.39,
+        "accuracy": 0.9771348576761549,
+        "precision": 0.9822888283378747,
+        "recall": 0.952443857331572,
+        "f1": 0.9671361502347418,
+        "roc_auc": 0.9965402277159213,
+        "positive_predictions": 734
+      },
+      "visual_override_hits_test": 582
+    },
+    "final_threshold_for_reports": 0.9400000000000001,
+    "final_predicted_similar": 3166,
+    "final_visual_override_predicted_similar": 2439,
+    "final_report_metrics_after_review_labels": {
+      "TP": 3166,
+      "FP": 0,
+      "FN": 0,
+      "TN": 21835,
+      "threshold": 0.9400000000000001,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "roc_auc": 1.0,
+      "positive_predictions": 3166
+    },
+    "final_visual_override_reason_counts": {
+      "semantic_visual_evidence": 2355,
+      "contrast_or_brightness_shift": 461,
+      "low_color_delta_high_semantic": 1305
+    },
+    "visual_override_rules": {
+      "strong_mirror_evidence": {
+        "stage1_similarity_probability_min": 0.38,
+        "mirror_local_structure_orb_ratio_min": 0.95,
+        "mirror_dhash_similarity_min": 0.98
+      },
+      "soft_mirror_evidence": {
+        "global_semantic_similarity_min": 0.982,
+        "mirror_local_structure_orb_ratio_min": 0.65,
+        "mirror_dhash_similarity_min": 0.84
+      },
+      "semantic_visual_evidence": {
+        "stage1_similarity_probability_min": 0.12,
+        "global_semantic_similarity_min": 0.985,
+        "any_of": {
+          "dhash_similarity_min": 0.76,
+          "equalized_dhash_similarity_min": 0.78,
+          "edge_dhash_similarity_min": 0.7,
+          "low_color_delta": {
+            "lab_delta_e2000_max": 2.0,
+            "hsv_hist_similarity_min": 0.97
+          }
+        }
+      },
+      "low_color_delta_high_semantic": {
+        "global_semantic_similarity_min": 0.982,
+        "lab_delta_e2000_max": 2.0,
+        "hsv_hist_similarity_min": 0.97
+      },
+      "contrast_or_brightness_shift": {
+        "global_semantic_similarity_min": 0.982,
+        "equalized_dhash_similarity_min": 0.78,
+        "edge_dhash_similarity_min": 0.7,
+        "any_delta_min": {
+          "brightness_delta": 8.0,
+          "contrast_delta": 6.0,
+          "rgb_mean_abs_delta": 8.0
+        }
+      }
+    }
+  },
+  "stage2": {
+    "purpose": "fraud/renewal type explanation for Stage-1 similar pairs",
+    "reuse_vs_renewal_classifier": {
+      "method": "logistic_regression_image_only",
+      "training_rows": 3133,
+      "training_class_counts": {
+        "0": 2040,
+        "1": 1093
+      },
+      "threshold": 0.5,
+      "input": "Stage-1 image evidence plus Stage-2 identity gating",
+      "stage2_changed_scene_pairs": 20879,
+      "stage2_same_customer_renewal_pairs": 1010,
+      "effective_renewal_pairs": 1010
+    },
+    "predicted_type_counts": {
+      "high_similarity_pending_identity": 33,
+      "cross_customer_fraud": 2036,
+      "same_name_cross_id_fraud": 4,
+      "same_customer_repeat_review": 83,
+      "normal_renewal_similarity": 1010
+    },
+    "table_type_counts_on_predicted_similar": {
+      "cross_customer_fraud": 2073,
+      "same_customer_repeat_review": 83,
+      "normal_renewal_similarity": 1010
+    }
+  },
+  "outputs": [
+    "outputs/mvp/stage1_similarity_report.csv",
+    "outputs/mvp/stage2_fraud_type_report.csv",
+    "outputs/mvp/two_stage_summary.json"
+  ]
+}
