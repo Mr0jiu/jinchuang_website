@@ -1,0 +1,79 @@
+model:
+  name: "google/siglip2-base-patch16-224"
+  embedding_dim: 768
+
+data:
+  image_size: 224
+  batch_size: 32
+  image_extensions: [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]
+
+retrieval:
+  index_path: "checkpoints/faiss_index.bin"
+  similarity_threshold: 0.94   # 默认阈值（dynamic_threshold.enabled=false 时使用）
+  index_type: "flat"       # "flat" 或 "ivf"（数据>10万推荐ivf）
+  nlist: 100               # IVF 聚类中心数（仅 index_type=ivf 时生效）
+  dynamic_threshold:
+    enabled: true            # true 启用差异化阈值策略
+    fraud: 0.75              # 跨客户欺诈阈值（高召回，宁可错杀不可放过）
+    same_customer: 0.92      # 同客户续贷阈值（高精度，减少正常业务打扰）
+
+preprocessing:
+  auto_rotate: true        # 自动旋转矫正
+  enhance_contrast: true   # CLAHE 光照增强
+  face_detect: false       # 人脸检测裁剪（OpenCV 5 不支持，禁用）
+  face_margin: 0.3         # 面部区域外扩比例
+  perspective_correct: true  # 透视矫正（合同/文档场景可选）
+
+classifier:
+  categories:
+    - id: "sign_photo"
+      name: "面签照片"
+      prompts:
+        - "two colleagues posing together indoors"
+        - "a bank employee and a customer posing for a photo together"
+        - "a posed photo of a customer with a bank staff member"
+        - "two people standing together at a bank counter"
+    - id: "id_card"
+      name: "身份证"
+      prompts:
+        - "a photo of a Chinese national ID card"
+        - "a close-up of an identity document with portrait"
+        - "the front or back side of an ID card"
+    - id: "contract"
+      name: "合同"
+      prompts:
+        - "a scanned document page with text and signature"
+        - "a loan contract document with terms and conditions"
+    - id: "bank_statement"
+      name: "银行流水"
+      prompts:
+        - "a photo of a bank statement showing transaction records"
+        - "a financial statement with rows of numbers and dates"
+    - id: "other"
+      name: "其他"
+      prompts:
+        - "a photo of a financial receipt"
+        - "a photo of a certificate with seal"
+        - "a photo of a building or house exterior"
+
+training:
+  triplet_margin: 0.3        # 标准 TripletLoss margin（仅标准模式使用）
+  dual_margin:
+    enabled: true            # true 启用分层双 Margin Loss（false 使用标准 TripletLoss）
+    m1: 0.3                   # 普通间隔：同客户 vs 陌生人
+    m2: 0.8                   # 欺诈间隔：同客户 vs 跨客户高仿（m2 > m1）
+    sim_threshold: 0.85       # 余弦相似度阈值，超过此值判为高仿
+  epochs: 20
+  learning_rate: 0.0001
+  val_split: 0.2
+  freeze_backbone: true    # 冻结 SigLIP2，仅训练分类头
+  augment_prob: 0.8        # 正样本数据增强概率（重复提交图增加多样性）
+  output_dir: "checkpoints/finetuned"
+
+app:
+  top_k: 5  # 检索返回最相似的5张
+
+evaluate:
+  test_dir: "test_eval"
+  output_dir: "eval_results"
+  thresholds: [0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
