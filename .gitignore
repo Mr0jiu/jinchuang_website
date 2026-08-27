@@ -58,3 +58,5 @@ dashboard_ui/saved_images/
 * (1).jpg
 *.bak_*
 *.bak
+dashboard_ui/modern_server(*).py
+/修改文档.txt
