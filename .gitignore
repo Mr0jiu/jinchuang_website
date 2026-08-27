@@ -1,0 +1,62 @@
+# 大模型权重 —— 超出 GitHub 单文件 100MB 限制，不入库。获取方式见 README「让 SigLIP2 模型本地可加载」。
+*.safetensors
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# 运行时 / 缓存
+*.log
+*.pid
+.gradio/
+.ipynb_checkpoints/
+
+# OS / 编辑器
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ---- frp 穿透工具与配置（含账号信息，与网页实现无关，勿入库） ----
+frpc
+frpc.exe
+frpc.ini
+frpc*.toml
+frpc*.ini
+web1/frpc*
+
+# ---- 压缩包 / 历史快照 / 旧版页面（与当前网页实现无关，仅存本地） ----
+*.7z
+index_new*.html
+dashboard_ui/index(*).html
+dashboard_ui/index_backup_*.html
+dashboard_ui/teamfix/
+dashboard_ui/gradio_*.py
+dashboard_ui/serve.py
+dashboard_ui/云端发布.py
+dashboard_ui/_server_adds.py
+dashboard_ui/_index_adds.html
+web1/网页云端.py
+web1/网页模板.py
+web1/网页逻辑.txt
+web1/db.py
+web1/import_data.py
+web1/migrate_db.py
+web1/setup_ssh.sh
+web1/*.docx
+
+# ---- 运行期产物 / 备份 / 重复文件 ----
+dashboard_ui/saved_images/
+*.db.bak*
+*.db.before_migrate
+/results.json
+* (1).jpg
+*.bak_*
+*.bak
+dashboard_ui/modern_server(*).py
+/修改文档.txt
