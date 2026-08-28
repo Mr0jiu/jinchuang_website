@@ -401,6 +401,52 @@ def _dashboard_payload() -> dict:
     return dash
 
 
+def _mvp_dashboard_payload() -> dict:
+    """首页模型 KPI：统一读取当前正式 MVP 汇总，而不是 SQLite 缓存。"""
+    output = ROOT.parent / "jinchuang_v4" / "code" / "outputs" / "mvp"
+    run = _read_json(output / "run_summary.json", {})
+    monitoring = _read_json(output / "fraud_monitoring_summary.json", {})
+    if not run or not monitoring:
+        return {}
+    customer_count = None
+    identity_path = output / "customer_identity_map_from_annotations.csv"
+    if identity_path.exists():
+        try:
+            with identity_path.open("r", encoding="utf-8-sig", newline="") as handle:
+                customer_count = len({
+                    row.get("customer_id_hash", "")
+                    for row in csv.DictReader(handle)
+                    if row.get("customer_id_hash", "")
+                })
+        except Exception:
+            customer_count = None
+    total_pairs = int(monitoring.get("total_pairs", 0) or 0)
+    suspicious_pairs = int(monitoring.get("suspicious_pairs", 0) or 0)
+    priority = monitoring.get("by_priority", {}) or {}
+    mtimes = [
+        (output / name).stat().st_mtime
+        for name in ("run_summary.json", "fraud_monitoring_summary.json")
+        if (output / name).exists()
+    ]
+    return {
+        "customers": customer_count,
+        "loans": int(run.get("selected_face_signing", 0) or 0),
+        "total_images": int(run.get("total_images", 0) or 0),
+        "face_images": int(run.get("selected_face_signing", 0) or 0),
+        "pending_review": int(priority.get("urgent", 0) or 0),
+        "involved_loans": int(monitoring.get("risk_graph_nodes", 0) or 0),
+        "feature_loans": int(run.get("selected_face_signing", 0) or 0),
+        "total_pairs": total_pairs,
+        "high_similar_pairs": suspicious_pairs,
+        "high_similar_rate": suspicious_pairs / total_pairs if total_pairs else 0,
+        "source": str(output),
+        "updated_at": datetime.fromtimestamp(max(mtimes)).astimezone().isoformat(timespec="seconds") if mtimes else "",
+        "similarity_dist": [],
+        "loan_structure": {},
+        "purpose_dist": {},
+    }
+
+
 
 def _sample_csv(path: Path, limit: int = 6, sort_key: str | None = None, reverse: bool = True):
     if not path.exists():
@@ -694,6 +740,9 @@ def stats():
     dash = _dashboard_payload()
     if dash:
         result["dashboard"] = dash
+    mvp_dash = _mvp_dashboard_payload()
+    if mvp_dash:
+        result["mvp_dashboard"] = mvp_dash
     # 客户授信结构（马赛克图数据）：同客户多笔授信 vs 单笔授信 × 行为交叉
     # 统计由 refresh_stats.py 计算并落库到 dashboard_overview / dashboard_credit_behavior，
     # 随「刷新数据」一起刷新
