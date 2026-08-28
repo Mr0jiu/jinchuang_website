@@ -76,6 +76,39 @@ def _detect_data_dir() -> Path:
 
 DATA_DIR = _detect_data_dir()
 SAME_CUSTOMER_DIR = ROOT.parent / "outputs" / "same_customer_experiment"
+_annotation_customer_cache: dict[str, str] | None = None
+
+
+def _annotation_customer_names() -> dict[str, str]:
+    """Load loan-id/name pairs from the source annotations as a display fallback."""
+    global _annotation_customer_cache
+    if _annotation_customer_cache is not None:
+        return _annotation_customer_cache
+    result: dict[str, str] = {}
+    for path in (DATA_DIR / "annotations_filtered_with_identity.csv", DATA_DIR / "annotations.csv"):
+        if not path.is_file():
+            continue
+        try:
+            with path.open("r", encoding="utf-8-sig", newline="") as handle:
+                for row in csv.DictReader(handle):
+                    loan_id = (row.get("loan_id") or "").strip()
+                    name = (row.get("姓名") or "").strip()
+                    if loan_id and name and loan_id not in result:
+                        result[loan_id] = name
+        except (OSError, UnicodeError, csv.Error):
+            continue
+        if result:
+            break
+    _annotation_customer_cache = result
+    return result
+
+
+def _fill_annotation_customer_names(rows: list[dict]) -> list[dict]:
+    names = _annotation_customer_names()
+    for row in rows:
+        if not str(row.get("customer_name") or "").strip() or row.get("customer_name") == "未登记":
+            row["customer_name"] = names.get(str(row.get("loan_id") or ""), "未登记")
+    return rows
 # 同客户区分实验产物候选目录：正式 outputs 目录优先，本机缺失时回退 teamfix 归档目录
 _SAME_CUSTOMER_CANDIDATES = [SAME_CUSTOMER_DIR, ROOT / "teamfix"]
 # Tab2「保存到库」的影像落盘目录：每批上传按保存时间建独立文件夹
@@ -778,7 +811,7 @@ def suspicious(limit: int = 100):
         biz_expr = 'coalesce(nullif(l."业务类型",\'\'),\'\')' if "业务类型" in cols \
             else "coalesce(l.business_type,'')"
         query = f"""
-        select l.loan_id, coalesce(c.name,'未登记') customer_name,
+        select l.loan_id, coalesce(nullif(trim(c.name),''),'未登记') customer_name,
                {biz_expr} business_type,
                coalesce(l.verify_status,'N') verify_status,
                coalesce(l.auto_group,'') auto_group,
@@ -789,7 +822,7 @@ def suspicious(limit: int = 100):
         order by case l.verify_status when 'C' then 0 when 'F' then 1 else 2 end,
                  l.created_at desc, l.loan_id desc limit ?
         """
-        rows = [dict(x) for x in conn.execute(query, (min(max(limit, 1), 500),)).fetchall()]
+        rows = _fill_annotation_customer_names([dict(x) for x in conn.execute(query, (min(max(limit, 1), 500),)).fetchall()])
     return {"items": rows, "source": "SQLite loans + customers", "score_note": "历史贷款表未存储逐笔相似度分数"}
 
 
@@ -808,8 +841,12 @@ def search_loans(q: str = "", limit: int = 200):
         biz_expr = 'coalesce(nullif(l."业务类型",\'\'),\'\')' if "业务类型" in cols \
             else "coalesce(l.business_type,'')"
         like = f"%{q}%"
+        annotation_ids = [loan_id for loan_id, name in _annotation_customer_names().items()
+                          if q.casefold() in name.casefold()]
+        name_fallback = (f" or l.loan_id in ({','.join('?' for _ in annotation_ids)})"
+                         if annotation_ids else "")
         query = f"""
-        select l.loan_id, coalesce(c.name,'未登记') customer_name,
+        select l.loan_id, coalesce(nullif(trim(c.name),''),'未登记') customer_name,
                coalesce(l.customer_id,'') customer_id,
                {biz_expr} business_type,
                coalesce(l.verify_status,'N') verify_status,
@@ -818,11 +855,11 @@ def search_loans(q: str = "", limit: int = 200):
                coalesce(l.created_at,'') created_at
         from loans l left join customers c on c.customer_id=l.customer_id
         where l.loan_id like ? or l.customer_id like ?
-              or coalesce(c.name,'') like ? or {biz_expr} like ?
+              or coalesce(c.name,'') like ? or {biz_expr} like ?{name_fallback}
         order by l.created_at desc, l.loan_id desc limit ?
         """
-        rows = [dict(x) for x in conn.execute(
-            query, (like, like, like, like, min(max(limit, 1), 500))).fetchall()]
+        params = [like, like, like, like, *annotation_ids, min(max(limit, 1), 500)]
+        rows = _fill_annotation_customer_names([dict(x) for x in conn.execute(query, params).fetchall()])
     return {"items": rows, "source": "SQLite loans + customers"}
 
 
@@ -838,16 +875,17 @@ def all_loans(limit: int = 3500):
         biz_expr = 'coalesce(nullif(l."业务类型",\'\'),\'\')' if "业务类型" in cols \
             else "coalesce(l.business_type,'')"
         query = f"""
-        select l.loan_id, coalesce(c.name,'未登记') customer_name,
+        select l.loan_id, coalesce(nullif(trim(c.name),''),'未登记') customer_name,
                {biz_expr} business_type,
                coalesce(l.verify_status,'N') verify_status,
                coalesce(l.auto_group,'') auto_group,
                coalesce(l.status,'') status,
                coalesce(l.created_at,'') created_at
         from loans l left join customers c on c.customer_id=l.customer_id
-        order by l.created_at desc, l.loan_id desc limit ?
+        order by case when nullif(trim(c.name),'') is null then 1 else 0 end,
+                 l.created_at desc, l.loan_id desc limit ?
         """
-        rows = [dict(x) for x in conn.execute(query, (min(max(limit, 1), 5000),)).fetchall()]
+        rows = _fill_annotation_customer_names([dict(x) for x in conn.execute(query, (min(max(limit, 1), 5000),)).fetchall()])
     return {"items": rows, "source": "SQLite loans + customers", "total": len(rows)}
 
 
