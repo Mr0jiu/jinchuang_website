@@ -437,7 +437,8 @@ def _mvp_dashboard_payload() -> dict:
     output = ROOT.parent / "jinchuang_v4" / "code" / "outputs" / "mvp"
     run = _read_json(output / "run_summary.json", {})
     monitoring = _read_json(output / "fraud_monitoring_summary.json", {})
-    if not run or not monitoring:
+    two_stage = _read_json(output / "two_stage_summary.json", {})
+    if not run or not monitoring or not two_stage:
         return {}
     customer_count = None
     identity_path = output / "customer_identity_map_from_annotations.csv"
@@ -454,6 +455,7 @@ def _mvp_dashboard_payload() -> dict:
     total_pairs = int(monitoring.get("total_pairs", 0) or 0)
     suspicious_pairs = int(monitoring.get("suspicious_pairs", 0) or 0)
     priority = monitoring.get("by_priority", {}) or {}
+    stage1 = two_stage.get("stage1", {}) or {}
     mtimes = [
         (output / name).stat().st_mtime
         for name in ("run_summary.json", "fraud_monitoring_summary.json")
@@ -466,6 +468,7 @@ def _mvp_dashboard_payload() -> dict:
         "face_images": int(run.get("selected_face_signing", 0) or 0),
         "pending_review": int(priority.get("urgent", 0) or 0),
         "involved_loans": int(monitoring.get("risk_graph_nodes", 0) or 0),
+        "stage1_final_predicted_similar": int(stage1.get("final_predicted_similar", 0) or 0),
         "feature_loans": int(run.get("selected_face_signing", 0) or 0),
         "total_pairs": total_pairs,
         "high_similar_pairs": suspicious_pairs,
@@ -1816,6 +1819,7 @@ def report_v2():
                 "group_precision": group.get("precision"),
                 "group_recall": group.get("recall"),
                 "group_f1": group.get("f1"),
+                "group_roc_auc": group.get("roc_auc"),
             },
             "fraud_monitoring": (exp.get("monitoring") or {}).get("summary", {}),
         }
@@ -1846,6 +1850,7 @@ def report_v2():
                 "group_precision": group.get("precision"),
                 "group_recall": group.get("recall"),
                 "group_f1": group.get("f1"),
+                "group_roc_auc": group.get("roc_auc"),
             },
             "fraud_monitoring": {"available": True, **base.get("monitoring", {})},
         }
