@@ -12,10 +12,15 @@
 客户名下 ≥2 笔 → 该客户全部贷款计「同客户多笔授信」，否则「单笔授信」；
 总数 = 贷款笔数（customer_id 为空的贷款归入单笔授信）。
 
+<<<<<<< HEAD
 统计对象 = 当前页面数据库 loans.face_feature 中的全量面签特征；该口径与页面实际
 可查询的 3,254 笔贷款及影像目录一一对应，天然排除身份证/合同/流水等其他类别。
 旧版曾优先读取可能包含历史补充样本的 FAISS 清单，导致首页面签数与页面数据库
 不一致；现在以数据库为准，避免统计口径漂移。
+=======
+统计对象 = FAISS 面签索引全量语料（建索引时仅收面签影像，天然排除身份证/
+合同/流水等其他类别）；模型不可用时退回 loans.face_feature 子集。
+>>>>>>> f8e418c7f21b8b16a00facbe43069b4749af8c89
 
 影像级口径（2026-08-23 修正）
 ----
@@ -255,6 +260,7 @@ def refresh_dashboard_stats(db_path: Path | None = None) -> dict:
         else:
             loan2biz = {}
 
+<<<<<<< HEAD
     # 以当前页面数据库为唯一统计口径。FAISS 可能保留历史/补充样本，
     # 若直接使用其 manifest，会造成面签数、配对数与页面贷款库不一致。
     with sqlite3.connect(db_path) as conn:
@@ -265,6 +271,18 @@ def refresh_dashboard_stats(db_path: Path | None = None) -> dict:
         ).fetchall()
     vecs = feats
     manifest = [{"loan_id": r[0]} for r in feature_rows]
+=======
+    # 首选 FAISS 全量面签语料；模型不可用时退回库内特征子集（口径降级但可用）
+    try:
+        vecs, manifest = model_bridge.get_face_corpus()
+    except Exception:
+        traceback.print_exc()
+        vecs, manifest = None, []
+    if vecs is None:
+        with sqlite3.connect(db_path) as conn:
+            feats, cust = _load_feature_matrix(conn)
+        vecs, manifest = feats, [{"loan_id": c} for c in (cust or [])]
+>>>>>>> f8e418c7f21b8b16a00facbe43069b4749af8c89
 
     n = len(manifest)
     total_pairs = n * (n - 1) // 2
