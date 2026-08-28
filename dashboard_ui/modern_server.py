@@ -398,6 +398,7 @@ def _stage2_display_counts(raw_counts: Counter | dict) -> dict[str, int]:
 # ---------------------------------------------------------------------------
 from refresh_stats import (  # noqa: E402
     HIGH_SIM_THRESHOLD,
+    SIM_THRESHOLDS,
     read_tables as _read_dashboard_tables_db,
     refresh_dashboard_stats,
 )
@@ -776,6 +777,26 @@ def stats():
         result["dashboard"] = dash
     mvp_dash = _mvp_dashboard_payload()
     if mvp_dash:
+        # 首页相似度折线图与阈值策略页统一使用 FAISS Top-5 命中样本口径。
+        # dashboard_similarity_dist 仍保留为数据库缓存明细，但不再作为首页折线图来源。
+        try:
+            policy_curve = []
+            policy_cache = _load_policy_eval_cache()
+            for threshold in SIM_THRESHOLDS:
+                metrics = _threshold_metrics(policy_cache, threshold)
+                policy_curve.append({
+                    "threshold": threshold,
+                    "pair_count": metrics["hits"],
+                    "hit_samples": metrics["hits"],
+                    "same_customer_pairs": None,
+                    "cross_customer_pairs": None,
+                })
+            if policy_curve:
+                mvp_dash["similarity_dist"] = policy_curve
+                mvp_dash["similarity_dist_source"] = "FAISS Top-5 全量面签离线回放"
+        except Exception:
+            # 模型回放不可用时保留已有缓存，保证首页仍可展示。
+            pass
         result["mvp_dashboard"] = mvp_dash
     # 客户授信结构（马赛克图数据）：同客户多笔授信 vs 单笔授信 × 行为交叉
     # 统计由 refresh_stats.py 计算并落库到 dashboard_overview / dashboard_credit_behavior，
@@ -935,10 +956,9 @@ def policy_impact(high_risk_threshold: float):
     except Exception as exc:
         traceback.print_exc()
         raise HTTPException(503, f"真实阈值评估不可用: {exc}") from exc
-    curve_thresholds = sorted(set([
-        0.90, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99,
-        round(high, 4),
-    ]))
+    # 与首页“相似度分布”共用同一组阈值档位：94%~98%，每 0.5% 一档。
+    # 用户调整后的 high_risk_threshold 仍单独通过 high_risk 返回。
+    curve_thresholds = list(SIM_THRESHOLDS)
     return {
         "available": True,
         "sample_count": cache["sample_count"],
