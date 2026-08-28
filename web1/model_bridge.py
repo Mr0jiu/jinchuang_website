@@ -287,13 +287,19 @@ def get_status() -> dict:
     }
 
 
-def search_similar(image, top_k: int = 5, query_loan_id: str = "") -> dict:
+def search_similar(
+    image,
+    top_k: int = 5,
+    query_loan_id: str = "",
+    force_sign_photo: bool = False,
+) -> dict:
     """上传图片 → 预处理 → 分类 → 特征提取 → FAISS 检索。
 
     Args:
         image: PIL.Image 或图片路径字符串
         top_k: 返回前 K 条
         query_loan_id: 查询图片所属 loan_id（用于差异化阈值，空则自动识别）
+        force_sign_photo: 调用方已完成类型闸门时，强制按面签照继续检索。
 
     Returns:
         {
@@ -339,6 +345,9 @@ def search_similar(image, top_k: int = 5, query_loan_id: str = "") -> dict:
         # 分类
         _, cat_name, _ = classifier.classify(img_tensor)
         is_sign, sign_conf = classifier.is_sign_photo(img_tensor)
+        if force_sign_photo:
+            is_sign = True
+            cat_name = "面签照片"
 
         if not is_sign:
             return {
@@ -988,7 +997,12 @@ def analyze_multi_signing_photos(
         None,
     )
     detect_result = (
-        search_similar(selected_image, top_k=top_k, query_loan_id=query_loan_id)
+        search_similar(
+            selected_image,
+            top_k=top_k,
+            query_loan_id=query_loan_id,
+            force_sign_photo=True,
+        )
         if selected_image is not None
         else {"results": [], "status": "选中照片读取失败", "category": "", "is_sign_photo": True}
     )
